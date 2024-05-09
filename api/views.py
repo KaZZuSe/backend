@@ -1,52 +1,73 @@
-from django.shortcuts import render
 from api.models import *
 from api.serializers import *
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics
 
-class UsuarioView(APIView):
-    def get(self, request):
-        usuarios = Usuario.objects.all()
-        serializer = UsuarioSerializer(usuarios, many=True)
-        return Response(serializer.data)
+class UsuarioView(generics.ListCreateAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
+class DetailedUsuarioView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Usuario.objects.all()
+    serializer_class = UsuarioSerializer
 
-    def post(self, request):
-        serializer = UsuarioSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class ProductoView(generics.ListCreateAPIView):
+    queryset = Producto.objects.all()
+    serializer_class = ProductoSerializer
 
-class ProductoView(APIView):
-    def get(self, request):
-        productos = Producto.objects.all()
-        serializer = ProductoSerializer(productos, many=True)
-        return Response(serializer.data)
+class DetailedProductoView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Producto.objects.all()
+    serializer_class = ProductoSerializer
 
-class CarritoView(APIView):
-    def get(self, request):
-        carritos = Carrito.objects.all()
-        serializer = CarritoSerializer(carritos, many=True)
-        return Response(serializer.data)
+class CarritoView(generics.ListCreateAPIView):
+    queryset = Carrito.objects.all()
+    serializer_class = CarritoSerializer
 
-class FavoritoView(APIView):
-    def get(self, request):
-        favoritos = Favorito.objects.all()
-        serializer = FavoritoSerializer(favoritos, many=True)
-        return Response(serializer.data)
+class DetailedCarritoView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Carrito.objects.all()
+    serializer_class = CarritoSerializer
 
-class VentaView(APIView):
-    def get(self, request):
-        ventas = Venta.objects.all()
-        serializer = VentaSerializer(ventas, many=True)
-        return Response(serializer.data)
+class FavoritoView(generics.ListCreateAPIView):
+    queryset = Favorito.objects.all()
+    serializer_class = FavoritoSerializer
 
-class PedidoView(APIView):
-    def get(self, request):
-        pedidos = Pedido.objects.all()
-        serializer = PedidoSerializer(pedidos, many=True)
-        return Response(serializer.data)
+class DetailedFavoritoView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Favorito.objects.all()
+    serializer_class = FavoritoSerializer
+
+class VentaView(generics.ListCreateAPIView):
+    queryset = Venta.objects.all()
+    serializer_class = VentaSerializer
+
+class DetailedVentaView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Venta.objects.all()
+    serializer_class = VentaSerializer
+
+class PagoView(generics.ListCreateAPIView):
+    queryset = Pago.objects.all()
+    serializer_class = PagoSerializer
     
+class DetailedPagoView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Pago.objects.all()
+    serializer_class = PagoSerializer
 
-# Create your views here.
+class PedidoView(generics.ListCreateAPIView):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+
+class DetailedPedidoView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+    
+class PedidoProductoView(generics.ListCreateAPIView):
+    queryset = PedidoProducto.objects.all()
+    serializer_class = PedidoProductoSerializer
+
+class DetailedPedidoProductoView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PedidoProducto.objects.all()
+    serializer_class = PedidoProductoSerializer
+class CarritoProductoView(generics.ListCreateAPIView):
+    queryset = CarritoProducto.objects.all()
+    serializer_class = CarritoProductoSerializer
+
+class DetailedCarritoProductoView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CarritoProducto.objects.all()
+    serializer_class = CarritoProductoSerializer
