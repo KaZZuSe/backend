@@ -4,7 +4,7 @@ from api.models import *
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['id','username','email', 'password', 'first_name', 'last_name', 'imagen', 'descripcion']
+        fields = ['id','username','email', 'password', 'first_name', 'last_name', 'imagen', 'descripcion', 'fecha_creacion', 'direccion']
 
 class ProductoSerializer(serializers.ModelSerializer):
     id_usuario = UsuarioSerializer

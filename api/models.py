@@ -1,14 +1,18 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from .custom_manager import UserCustomManager
+from django.utils import timezone
 
-from django.db import models
-from django.contrib.auth.models import AbstractUser
 
-class Usuario(AbstractUser):
+
+
+class Usuario(AbstractUser, PermissionsMixin):
     username = models.CharField(max_length=255, unique=True)
+    email = models.EmailField(max_length=255, unique=True)
     imagen = models.ImageField(upload_to='images_profile/', blank=True)
     descripcion = models.CharField(max_length=255, blank=True)
     fecha_creacion = models.DateField(auto_now_add=True)
-    direccion = models.CharField(max_length=255, blank=True)
+    direccion = models.CharField(max_length=255)
     groups = models.ManyToManyField(
         'auth.Group',
         verbose_name='groups',
@@ -25,6 +29,9 @@ class Usuario(AbstractUser):
         related_name="customuser_user_permissions",
         related_query_name="user",
     )
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ["first_name", "last_name", "email", "password","direccion"]
+    objects = UserCustomManager()
 
 class Producto(models.Model):
     nombre = models.CharField(max_length=255)
@@ -69,7 +76,7 @@ class Favorito(models.Model):
 
 class Pedido(models.Model):
     id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    fecha_pedido = models.DateField(null=True, blank=True)
+    fecha_pedido = models.DateField(default=timezone.now())
     estado = models.CharField(default='no pagado', choices=[
         ('enviado', 'Enviado'),
         ('recibido', 'Recibido'),
