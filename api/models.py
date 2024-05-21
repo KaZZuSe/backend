@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from .custom_manager import UserCustomManager
-from django.utils import timezone
+from django.utils.timezone import now
 
 
 
@@ -76,7 +76,7 @@ class Favorito(models.Model):
 
 class Pedido(models.Model):
     id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    fecha_pedido = models.DateField(default=timezone.now())
+    fecha_pedido = models.DateField(default=now())
     estado = models.CharField(default='no pagado', choices=[
         ('enviado', 'Enviado'),
         ('recibido', 'Recibido'),
