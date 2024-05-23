@@ -73,8 +73,10 @@ class ProductoView(generics.ListCreateAPIView):
     serializer_class = ProductoSerializer
 
 class DetailedProductoView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
+    permission_classes = [IsAuthenticated]
+    def get_object(self):
+        return Producto.objects.get(id_usuario=self.request.user)
 
 @api_view(['POST'])
 def subir_producto(request):

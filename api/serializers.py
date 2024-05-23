@@ -7,6 +7,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         fields = ['id','username','email', 'password', 'first_name', 'last_name', 'imagen', 'descripcion', 'fecha_creacion', 'direccion']
 
 class ProductoSerializer(serializers.ModelSerializer):
+    usuario = UsuarioSerializer(read_only=True)
     id_usuario = UsuarioSerializer
     class Meta:
         model = Producto

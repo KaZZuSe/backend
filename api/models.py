@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from .custom_manager import UserCustomManager
-from django.utils.timezone import now
 
 
 
@@ -37,6 +36,7 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=255)
     descripcion = models.CharField(max_length=255)
     imagen = models.ImageField(upload_to='images_producto/', blank=True)
+    talla = models.CharField(max_length=2, blank=True)
     categoria = models.CharField(max_length=255, choices=[
         ('pantalon', 'Pantalón'),
         ('camiseta', 'Camiseta'),
@@ -49,7 +49,8 @@ class Producto(models.Model):
         ('bermuda', 'Bermuda'),
     ])
     precio = models.DecimalField(max_digits=10, decimal_places=2)
-    id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='producto')	
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='usuario')
 
 class Carrito(models.Model):
     id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
@@ -76,7 +77,7 @@ class Favorito(models.Model):
 
 class Pedido(models.Model):
     id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    fecha_pedido = models.DateField(default=now())
+    fecha_pedido = models.DateField(auto_now_add=True)
     estado = models.CharField(default='no pagado', choices=[
         ('enviado', 'Enviado'),
         ('recibido', 'Recibido'),
