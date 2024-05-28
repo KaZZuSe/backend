@@ -49,8 +49,8 @@ class Producto(models.Model):
         ('bermuda', 'Bermuda'),
     ])
     precio = models.DecimalField(max_digits=10, decimal_places=2)
-    id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='producto')	
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='usuario')
+    id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    #usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='usuario')
 
 class Carrito(models.Model):
     id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
@@ -58,7 +58,6 @@ class Carrito(models.Model):
 class CarritoProducto(models.Model):
     id_carrito = models.ForeignKey(Carrito, on_delete=models.CASCADE)
     id_producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
 
 class Pago(models.Model):
     id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
@@ -90,7 +89,6 @@ class Pedido(models.Model):
 class PedidoProducto(models.Model):
     id_pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
     id_producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
 
 class Venta(models.Model):
     id_producto = models.ForeignKey(Producto, on_delete=models.CASCADE)

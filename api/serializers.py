@@ -7,8 +7,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
         fields = ['id','username','email', 'password', 'first_name', 'last_name', 'imagen', 'descripcion', 'fecha_creacion', 'direccion']
 
 class ProductoSerializer(serializers.ModelSerializer):
-    usuario = UsuarioSerializer(read_only=True)
-    id_usuario = UsuarioSerializer
+    id_usuario = UsuarioSerializer(read_only=True)
+    #usuario = UsuarioSerializer
     class Meta:
         model = Producto
         fields = '__all__'
@@ -20,10 +20,13 @@ class CarritoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 class CarritoProductoSerializer(serializers.ModelSerializer):
     id_carrito = CarritoSerializer
-    id_producto = ProductoSerializer
+    id_producto = ProductoSerializer(read_only=True)
+    class Meta:
+        model = CarritoProducto
+        fields = '__all__'
 class FavoritoSerializer(serializers.ModelSerializer):
-    id_usuario = UsuarioSerializer
-    id_producto = ProductoSerializer
+    id_usuario = UsuarioSerializer(read_only=True)
+    id_producto = ProductoSerializer(read_only=True)
     class Meta:
         model = Favorito
         fields = '__all__'

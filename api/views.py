@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Sum
+from rest_framework.exceptions import NotFound
 class UsuarioView(generics.ListCreateAPIView):
     serializer_class = UsuarioSerializer
     def get_queryset(self):
@@ -101,32 +103,60 @@ class DetailedCarritoView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return Carrito.objects.get(id_usuario=self.request.user)
 
-from django.db.models import Sum
 
+
+class GetCarritoView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CarritoSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        carrito = self.get_object()
+        serializer = self.get_serializer(carrito)
+        data = serializer.data
+        data['productos'] = self.get_productos(carrito)
+        return Response(data)
+
+    def get_object(self):
+        carrito, created = Carrito.objects.get_or_create(id_usuario=self.request.user)
+        if not carrito.carritoproducto_set.exists():
+            raise NotFound("El carrito está vacío")
+        return carrito
+
+    def get_productos(self, carrito):
+        productos = carrito.carritoproducto_set.all()
+        serializer = CarritoProductoSerializer(productos, many=True)
+        return serializer.data
+
+class RemoveCarritoView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    def delete(self, request, product_id, *args, **kwargs):
+        producto = get_object_or_404(Producto, id=product_id)
+        usuario = request.user
+        carrito = get_object_or_404(Carrito, id_usuario=usuario)
+        producto_carrito = get_object_or_404(CarritoProducto, id_carrito=carrito, id_producto=producto)
+        producto_carrito.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 @api_view(['POST'])
 def add_cart(request, producto_id):
     producto = Producto.objects.get(pk=producto_id)
     usuario = request.user
+    if producto.id_usuario != usuario:
+        # Obtener o crear el carrito del usuario
+        carrito, creado = Carrito.objects.get_or_create(id_usuario=usuario)
 
-    # Obtener o crear el carrito del usuario
-    carrito, creado = Carrito.objects.get_or_create(id_usuario=usuario)
+        # Crear o actualizar el producto en el carrito
+        carrito_producto, creado = CarritoProducto.objects.get_or_create(id_carrito=carrito, id_producto=producto)
+        carrito_producto.save()
 
-    # Crear o actualizar el producto en el carrito
-    carrito_producto, creado = CarritoProducto.objects.get_or_create(id_carrito=carrito, id_producto=producto)
-    carrito_producto.total += 1
-    carrito_producto.save()
+        # Calcular el total de productos y el total del precio en el carrito
+        total_precio = CarritoProducto.objects.filter(id_carrito=carrito).aggregate(total_precio=Sum('id_producto__precio'))
 
-    # Calcular el total de productos y el total del precio en el carrito
-    total_productos = CarritoProducto.objects.filter(id_carrito=carrito).aggregate(total_productos=Sum('total'))
-    total_precio = CarritoProducto.objects.filter(id_carrito=carrito).aggregate(total_precio=Sum('id_producto__precio'))
-
-    response_data = {
-        'producto': CarritoProductoSerializer(carrito_producto).data,
-        'total_productos': total_productos['total_productos'],
-        'total_precio': total_precio['total_precio']
-    }
-
-    return Response(response_data, status=status.HTTP_200_OK)
+        response_data = {
+            'producto': CarritoProductoSerializer(carrito_producto).data,
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+    else:
+        return Response({'detail': 'No puedes agregar un producto a si mismo'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 def get_carrito_productos(request):
@@ -156,16 +186,15 @@ class DetailedFavoritoView(generics.RetrieveUpdateDestroyAPIView):
 @api_view(['POST'])
 def add_favorito(request, product_id):
     # Verificar si el usuario y el producto existen
-    user = request.user
-    product = get_object_or_404(Producto, id=product_id)
-    
+    usuario = request.user
+    producto = get_object_or_404(Producto, id=product_id)
     # Verificar si el producto ya está en favoritos del usuario
-    favorito_existente = Favorito.objects.filter(id_usuario=user, id_producto=product).exists()
+    favorito_existente = Favorito.objects.filter(id_usuario=usuario, id_producto=producto).exists()
     if favorito_existente:
         return Response({'detail': 'El producto ya está en favoritos'}, status=status.HTTP_400_BAD_REQUEST)
     
     # Crear un nuevo favorito
-    favorito = Favorito.objects.create(id_usuario=user, id_producto=product)
+    favorito = Favorito.objects.create(id_usuario=usuario, id_producto=producto)
     
     # Serializar y devolver la respuesta
     serializer = FavoritoSerializer(favorito)

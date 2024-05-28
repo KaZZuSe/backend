@@ -11,12 +11,14 @@ urlpatterns = [
     path('productos/<int:pk>/', DetailedProductoView.as_view()),
     path('productos/<int:pk>/add/', subir_producto),
     path('carritos/', CarritoView.as_view()),
+    path('carritos/get/', GetCarritoView.as_view()),
+    path('carritos/remove/<int:product_id>/', RemoveCarritoView.as_view()),
     path('carritos/<int:pk>/', DetailedCarritoView.as_view()),
     path('carritos/<int:pk>/productos/', CarritoProductoView.as_view()),
     path('carritos/<int:pk>/productos/<int:product_pk>/', DetailedCarritoProductoView.as_view()),  # pk2 renombrado a product_pk
     path('favoritos/', FavoritoView.as_view()),
     path('favoritos/<int:pk>/', DetailedFavoritoView.as_view()),
-    path('favoritos/<int:product_id>/add/', add_favorito),
+    path('favoritos/add/<int:product_id>/', add_favorito),
     path('ventas/', VentaView.as_view()),
     path('ventas/<int:pk>/', DetailedVentaView.as_view()),
     path('pedidos/', PedidoView.as_view()),
@@ -29,5 +31,5 @@ urlpatterns = [
     path('pagos/process/', process_payment),
     path('carrito/add/<int:producto_id>/', add_cart),  # Añadido el endpoint para añadir productos al carrito
     path('carrito/productos/', get_carrito_productos),  # Añadido el endpoint para obtener productos del carrito
-    path('favoritos-get', get_favoritos),  # Añadido el endpoint para obtener favoritos
+    path('favoritos/get/', get_favoritos),  # Añadido el endpoint para obtener favoritos
 ]
