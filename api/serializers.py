@@ -25,7 +25,7 @@ class CarritoProductoSerializer(serializers.ModelSerializer):
         model = CarritoProducto
         fields = '__all__'
 class FavoritoSerializer(serializers.ModelSerializer):
-    id_usuario = UsuarioSerializer(read_only=True)
+    id_usuario = UsuarioSerializer()
     id_producto = ProductoSerializer(read_only=True)
     class Meta:
         model = Favorito

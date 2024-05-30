@@ -5,8 +5,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum
+from rest_framework.permissions import IsAuthenticated,AllowAny
+from django.db.models import Sum, Q
 from rest_framework.exceptions import NotFound
 class UsuarioView(generics.ListCreateAPIView):
     serializer_class = UsuarioSerializer
@@ -71,8 +71,24 @@ def logout(request):
         token.delete()
     return Response(status=status.HTTP_200_OK)
 class ProductoView(generics.ListCreateAPIView):
-    queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            queryset = Producto.objects.filter(~Q(id_usuario=self.request.user.id))
+        else:
+            queryset = Producto.objects.all()
+        return queryset
+
+@api_view(['GET'])
+def get_productos(request):
+    permission_classes = [AllowAny]
+    if request.auth:
+        queryset = Producto.objects.filter(~Q(id_usuario=request.user.id))
+    else:
+        queryset = Producto.objects.all()
+    serializer = ProductoSerializer(queryset, many=True)
+    return Response(serializer.data)
+
 
 class DetailedProductoView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductoSerializer
@@ -205,6 +221,15 @@ def get_favoritos(request):
     favoritos = Favorito.objects.filter(id_usuario=user)
     serializer = FavoritoSerializer(favoritos, many=True)
     return Response(serializer.data)
+
+@api_view(['POST'])
+def remove_favorito(request, product_id):
+    # Verificar si el usuario y el proyecto existen
+    usuario = request.user
+    producto = get_object_or_404(Producto, id=product_id)
+    # Verificar si el proyecto ya está en favoritos del usuario
+    favorito = get_object_or_404(Favorito, id_usuario=usuario, id_producto=producto)
+    favorito.delete()
 
 class VentaView(generics.ListCreateAPIView):
     serializer_class = VentaSerializer

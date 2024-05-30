@@ -7,7 +7,7 @@ urlpatterns = [
     path('logout/', logout),
     path('usuarios/', UsuarioView.as_view()),
     path('usuarios-detalle/', DetailedUsuarioView.as_view()),
-    path('productos/', ProductoView.as_view()),
+    path('productos/',get_productos),
     path('productos/<int:pk>/', DetailedProductoView.as_view()),
     path('productos/<int:pk>/add/', subir_producto),
     path('carritos/', CarritoView.as_view()),
@@ -32,4 +32,5 @@ urlpatterns = [
     path('carrito/add/<int:producto_id>/', add_cart),  # Añadido el endpoint para añadir productos al carrito
     path('carrito/productos/', get_carrito_productos),  # Añadido el endpoint para obtener productos del carrito
     path('favoritos/get/', get_favoritos),  # Añadido el endpoint para obtener favoritos
+    path('favoritos/remove/<int:product_id>/', remove_favorito),
 ]
