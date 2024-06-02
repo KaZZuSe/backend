@@ -3,8 +3,9 @@ from api.serializers import *
 from rest_framework import status, generics
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from django.db.models import Sum, Q
 from rest_framework.exceptions import NotFound
@@ -90,21 +91,57 @@ def get_productos(request):
     return Response(serializer.data)
 
 
+@api_view(['DELETE'])
+def remove_producto(request, product_id):
+    permission_classes = [IsAuthenticated]
+    if request.auth:
+        queryset = Producto.objects.filter(id=product_id, id_usuario=request.user.id)
+    else:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    if queryset.exists():
+        queryset.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def get_productos_usuario(request):
+    permission_classes = [IsAuthenticated]
+    if request.auth:
+        queryset = Producto.objects.filter(id_usuario=request.user.id)
+    serializer = ProductoSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+class CategoriasView(APIView):
+    def get(self, request):
+        categorias = [
+            'pantalon', 'camiseta', 'sudadera', 'chaqueta', 
+            'cazadora', 'zapato', 'zapatilla', 'accesorio', 'bermuda'
+        ]
+        return Response(categorias, status=status.HTTP_200_OK)
+
 class DetailedProductoView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductoSerializer
     permission_classes = [IsAuthenticated]
     def get_object(self):
         return Producto.objects.get(id_usuario=self.request.user)
-
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def subir_producto(request):
-    request.data['id_usuario'] = request.user
-    serializer = ProductoSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    user = request.user
+    data = request.data
 
+    producto = Producto.objects.create(
+        nombre=data['nombre'],
+        descripcion=data['descripcion'],
+        talla=data['talla'],
+        categoria=data['categoria'],
+        precio=data['precio'],
+        imagen=data.get('imagen', None),
+        id_usuario=user
+    )
+
+    return Response({"message": "Producto creado con éxito", "producto_id": producto.id})
 class CarritoView(generics.ListCreateAPIView):
     serializer_class = CarritoSerializer
     def get_queryset(self):
