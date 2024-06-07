@@ -9,6 +9,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from django.db.models import Sum, Q
 from rest_framework.exceptions import NotFound
+from rest_framework.filters import SearchFilter
+import time
 class UsuarioView(generics.ListCreateAPIView):
     serializer_class = UsuarioSerializer
     def get_queryset(self):
@@ -16,6 +18,21 @@ class UsuarioView(generics.ListCreateAPIView):
             return Usuario.objects.all()
         else:
             return [self.request.user]
+        
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_user_info(request, user_id):
+    try:
+        usuario = Usuario.objects.get(id=user_id)
+        data = {
+            'id': usuario.id,
+            'username': usuario.username,
+            'fecha_creacion': usuario.fecha_creacion,
+            'imagen': usuario.imagen.url if usuario.imagen else None,
+        }
+        return Response(data, status=status.HTTP_200_OK)
+    except Usuario.DoesNotExist:
+        return Response({'detail': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 class DetailedUsuarioView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UsuarioSerializer
     permission_classes = [IsAuthenticated]
@@ -75,18 +92,42 @@ class ProductoView(generics.ListCreateAPIView):
     serializer_class = ProductoSerializer
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            queryset = Producto.objects.filter(~Q(id_usuario=self.request.user.id))
+            queryset = Producto.objects.filter(~Q(id_usuario=self.request.user.id), vendido=False)
         else:
-            queryset = Producto.objects.all()
+            queryset = Producto.objects.filter(vendido=False)
         return queryset
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def remove_usuario(request):
+    try:
+        usuario = Usuario.objects.get(id=request.user.id)
+        usuario.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    except Usuario.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_usuario(request):
+    try:
+        usuario = Usuario.objects.get(id=request.user.id)
+    except Usuario.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = UsuarioSerializer(usuario, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 def get_productos(request):
     permission_classes = [AllowAny]
     if request.auth:
-        queryset = Producto.objects.filter(~Q(id_usuario=request.user.id))
+        queryset = Producto.objects.filter(~Q(id_usuario=request.user.id), vendido=False)
     else:
-        queryset = Producto.objects.all()
+        queryset = Producto.objects.filter(vendido=False)
     serializer = ProductoSerializer(queryset, many=True)
     return Response(serializer.data)
 
@@ -103,12 +144,35 @@ def remove_producto(request, product_id):
         return Response(status=status.HTTP_204_NO_CONTENT)
     return Response(status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_producto(request, product_id):
+    try:
+        producto = Producto.objects.get(id=product_id, id_usuario=request.user.id)
+    except Producto.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ProductoSerializer(producto, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 def get_productos_usuario(request):
     permission_classes = [IsAuthenticated]
     if request.auth:
-        queryset = Producto.objects.filter(id_usuario=request.user.id)
+        queryset = Producto.objects.filter(id_usuario=request.user.id, vendido=False)
+    serializer = ProductoSerializer(queryset, many=True)
+    return Response(serializer.data)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_productos_usuario_id(request, user_id=None):
+    if user_id:
+        queryset = Producto.objects.filter(id_usuario=user_id, vendido=False)
+    else:
+        queryset = Producto.objects.filter(id_usuario=request.user.id, vendido=False)
     serializer = ProductoSerializer(queryset, many=True)
     return Response(serializer.data)
 
@@ -120,6 +184,19 @@ class CategoriasView(APIView):
         ]
         return Response(categorias, status=status.HTTP_200_OK)
 
+
+
+class BuscarProductoView(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = ProductoSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['nombre', 'descripcion', 'categoria']
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return Producto.objects.filter(~Q(id_usuario=self.request.user), vendido=False)
+        else:
+            return Producto.objects.filter(vendido=False)
 class DetailedProductoView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductoSerializer
     permission_classes = [IsAuthenticated]
@@ -137,7 +214,11 @@ def subir_producto(request):
         talla=data['talla'],
         categoria=data['categoria'],
         precio=data['precio'],
-        imagen=data.get('imagen', None),
+        imagen=data.get('imagen'),
+        imagen2=data.get('imagen2'),
+        imagen3=data.get('imagen3'),
+        imagen4=data.get('imagen4'),
+        imagen5=data.get('imagen5'),
         id_usuario=user
     )
 
@@ -255,9 +336,25 @@ def add_favorito(request, product_id):
 @api_view(['GET'])
 def get_favoritos(request):
     user = request.user
-    favoritos = Favorito.objects.filter(id_usuario=user)
+    favoritos = Favorito.objects.filter(id_usuario=user, id_producto__vendido=False)
     serializer = FavoritoSerializer(favoritos, many=True)
     return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_pedidos(request):
+    pedidos = Pedido.objects.filter(id_usuario=request.user)
+    pedidos_data = []
+
+    for pedido in pedidos:
+        pedido_productos = PedidoProducto.objects.filter(id_pedido=pedido)
+        pedido_productos_serializer = PedidoProductoSerializerDialog(pedido_productos, many=True)
+
+        pedido_data = PedidoSerializer(pedido).data
+        pedido_data['productos'] = pedido_productos_serializer.data
+        pedidos_data.append(pedido_data)
+
+    return Response(pedidos_data)
 
 @api_view(['POST'])
 def remove_favorito(request, product_id):
@@ -296,28 +393,6 @@ class DetailedPagoView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     def get_object(self):
         return Pago.objects.get(id_usuario=self.request.user)
-    
-@api_view(['POST'])
-def process_payment(request):
-    # Este es un ejemplo básico y necesitará ser adaptado para trabajar con una pasarela de pago real
-    data = request.data
-    user = get_object_or_404(Usuario, id=data['id_usuario'])
-    pago = Pago.objects.create(
-        id_usuario=user,
-        tipo_pago=data['tipo_pago'],
-        num_tarjeta=data['num_tarjeta'],
-        fecha_vencimiento=data['fecha_vencimiento'],
-        cvc=data['cvc']
-    )
-    pedido = Pedido.objects.create(
-        id_usuario=user,
-        fecha_pedido=timezone.now(),
-        estado='pagado',
-        id_pago=pago
-    )
-    return Response({'detail': 'Pago procesado y pedido creado'}, status=status.HTTP_201_CREATED)
-
-
 class PedidoView(generics.ListCreateAPIView):
     serializer_class = PedidoSerializer
     def get_queryset(self):
@@ -369,3 +444,97 @@ class DetailedCarritoProductoView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     def get_object(self):
         return CarritoProducto.objects.get(id_carrito=self.request.user)
+
+# Vista para crear pedido
+@api_view(['POST'])
+def crear_pedido(request):
+    user = request.user
+    direccion = request.data.get('direccion')
+    direccion_facturacion = request.data.get('direccion')
+    tipo_pago = request.data.get('tipo_pago')
+    nombre_tarjeta = request.data.get('nombre_tarjeta', None)
+    num_tarjeta = request.data.get('num_tarjeta', None)
+    fecha_vencimiento = request.data.get('fecha_vencimiento', None)
+    cvc = request.data.get('cvc', None)
+
+    if not direccion or not direccion_facturacion:
+        return Response({"error": "Dirección y dirección de facturación son requeridas"}, status=400)
+
+    # Crear Pago
+    pago_data = {
+        "id_usuario": user.id,
+        "tipo_pago": tipo_pago,
+    }
+
+    if tipo_pago == "tarjeta":
+        if not nombre_tarjeta or not num_tarjeta or not fecha_vencimiento or not cvc:
+            return Response({"error": "Todos los campos de la tarjeta son requeridos para pagos con tarjeta"}, status=400)
+        pago_data.update({
+            "nombre_tarjeta": nombre_tarjeta,
+            "num_tarjeta": num_tarjeta,
+            "fecha_vencimiento": fecha_vencimiento,
+            "cvc": cvc
+        })
+
+    pago_serializer = PagoSerializer(data=pago_data, context={'request': request})
+    if pago_serializer.is_valid():
+        pago = pago_serializer.save()
+    else:
+        return Response(pago_serializer.errors, status=400)
+
+    # Crear Pedido
+    pedido_data = {
+        "id_usuario": user.id,
+        "estado": "pagado" if tipo_pago == "tarjeta" else "no pagado",
+        "id_pago": pago.id,
+        "direccion": direccion,
+        "direccion_facturacion": direccion_facturacion,
+        "fecha_pedido": time.strftime("%x")
+    }
+
+    pedido_serializer = PedidoSerializer(data=pedido_data)
+    if pedido_serializer.is_valid():
+        pedido = pedido_serializer.save()
+    else:
+        return Response(pedido_serializer.errors, status=400)
+    
+    # Obtener productos del carrito
+    carrito_productos = CarritoProducto.objects.filter(id_carrito__id_usuario=user)
+    carrito_productos_serializer = CarritoProductoSerializer(carrito_productos, many=True)
+
+    # Procesar cada producto en el carrito
+    for cp in carrito_productos_serializer.data:
+        producto_id = cp['id_producto']['id']
+        usuario_vendedor_id = cp['id_producto']['id_usuario']['id']
+        
+        # Crear PedidoProducto
+        pedido_producto_data = {
+            "id_pedido": pedido.id,
+            "id_producto": producto_id
+        }
+        pedido_producto_serializer = PedidoProductoSerializer(data=pedido_producto_data)
+        if pedido_producto_serializer.is_valid():
+            pedido_producto_serializer.save()
+        else:
+            return Response(pedido_producto_serializer.errors, status=400)
+
+        # Crear Venta
+        venta_data = {
+            "id_producto": producto_id,
+            "id_usuario_comprador": user.id,
+            "id_usuario_vendedor": usuario_vendedor_id
+        }
+        venta_serializer = VentaSerializer(data=venta_data)
+        if venta_serializer.is_valid():
+            venta_serializer.save()
+        else:
+            return Response(venta_serializer.errors, status=400)
+
+    # Actualizar productos como vendidos y eliminarlos del carrito
+    for cp in carrito_productos:
+        producto = cp.id_producto
+        cp.delete()
+        producto.vendido = True
+        producto.save()
+
+    return Response({"message": "Pedido, pago, venta y actualización del producto realizados correctamente"}, status=201)

@@ -36,6 +36,10 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=255)
     descripcion = models.CharField(max_length=255)
     imagen = models.ImageField(upload_to='images_producto/', blank=True)
+    imagen2 = models.ImageField(upload_to='images_producto/', blank=True, null=True)
+    imagen3 = models.ImageField(upload_to='images_producto/', blank=True, null=True)
+    imagen4 = models.ImageField(upload_to='images_producto/', blank=True, null=True)
+    imagen5 = models.ImageField(upload_to='images_producto/', blank=True, null=True)
     talla = models.CharField(max_length=2, blank=True)
     categoria = models.CharField(max_length=255, choices=[
         ('pantalon', 'Pantalón'),
@@ -49,6 +53,7 @@ class Producto(models.Model):
         ('bermuda', 'Bermuda'),
     ])
     precio = models.DecimalField(max_digits=10, decimal_places=2)
+    vendido = models.BooleanField(default=False)
     id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     #usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='usuario')
 
@@ -61,14 +66,15 @@ class CarritoProducto(models.Model):
 
 class Pago(models.Model):
     id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    tipo_pago = models.CharField(default='tarjeta', choices=[
+    tipo_pago = models.CharField(default='contrarreembolso', choices=[
         ('tarjeta', 'Tarjeta'),
         ('paypal', 'Paypal'),
         ('contrarreembolso', 'Contrarreembolso'),
     ])
-    num_tarjeta = models.CharField(max_length=16)
-    fecha_vencimiento = models.DateField()
-    cvc = models.CharField(max_length=3)
+    num_tarjeta = models.CharField(max_length=16, blank=True, null=True)
+    fecha_vencimiento = models.DateField(blank=True, null=True)
+    cvc = models.CharField(max_length=3, blank=True, null=True)
+    nombre_tarjeta = models.CharField(max_length=255, blank=True, null=True)
 
 class Favorito(models.Model):
     id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
@@ -84,6 +90,8 @@ class Pedido(models.Model):
         ('no pagado', 'No pagado'),
         ('pagado', 'Pagado'),
     ])
+    direccion = models.CharField(max_length=255, blank=True)
+    direccion_facturacion = models.CharField(max_length=255, blank=True)
     id_pago = models.ForeignKey(Pago, on_delete=models.CASCADE, null=True, blank=True)
 
 class PedidoProducto(models.Model):
