@@ -446,6 +446,7 @@ class DetailedCarritoProductoView(generics.RetrieveUpdateDestroyAPIView):
         return CarritoProducto.objects.get(id_carrito=self.request.user)
 
 # Vista para crear pedido
+
 @api_view(['POST'])
 def crear_pedido(request):
     user = request.user
@@ -469,6 +470,7 @@ def crear_pedido(request):
     if tipo_pago == "tarjeta":
         if not nombre_tarjeta or not num_tarjeta or not fecha_vencimiento or not cvc:
             return Response({"error": "Todos los campos de la tarjeta son requeridos para pagos con tarjeta"}, status=400)
+
         pago_data.update({
             "nombre_tarjeta": nombre_tarjeta,
             "num_tarjeta": num_tarjeta,
