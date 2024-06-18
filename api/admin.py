@@ -1,6 +1,10 @@
 from django.contrib import admin
 from api.models import *
 
+"""	
+Configurar el administrador para este proyecto.
+
+"""
 admin.site.register(Usuario)
 admin.site.register(Producto)
 admin.site.register(Carrito)

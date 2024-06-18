@@ -3,14 +3,17 @@ from django.contrib.auth.models import BaseUserManager
 class UserCustomManager(BaseUserManager):
     """
     Administrador de usuarios personalizado para este proyecto.
+
     """
     def create_user(self,username, first_name, last_name, email, password,direccion, **extra_fields):
         """
-        Crear y guardar un usuario con el email y password proporcionado.
+        Crear y guardar un usuario con el email y contraseña proporcionado.
+
         """
         if not email:
             raise ValueError('Debes introducir un email')
         email = self.normalize_email(email)
+        # Crear el usuario seguido de los campos extras
         user = self.model(
             first_name=first_name,
             last_name=last_name,
@@ -19,15 +22,19 @@ class UserCustomManager(BaseUserManager):
             direccion=direccion,
             **extra_fields
         )
+        # Encriptar la contraseña y guardar el usuario
         user.set_password(password)
         user.save(using=self._db)
         return user
 
     def create_superuser(self, username,first_name, last_name, email, password,**extra_fields):
         """
-        Create and save a SuperUser with the given email and password.
+        Crear y guardar un super usuario con el email y contraseña proporcionado.
+
         """
+        # Definir los campos extras	
         extra_fields.setdefault('is_staff', True)
+        # Establecer is_superuser como True
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
         

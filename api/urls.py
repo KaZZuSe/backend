@@ -1,6 +1,10 @@
 from django.urls import path
 from .views import *
+"""
 
+Las siguientes URLs corresponden al backend del proyecto. Forman los endpoints para la API.
+
+"""
 urlpatterns = [
     path('register/', register),
     path('login/', login),

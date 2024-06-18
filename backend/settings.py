@@ -57,17 +57,19 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
 }
-AUTH_USER_MODEL = 'api.Usuario'
+AUTH_USER_MODEL = 'api.Usuario' # Establecer el modelo de usuario para autenticar
 
+# Configurar CORS
 CORS_ALLOW_ALL_ORIGINS = True
+# Configurar CORS
 CORS_ALLOWED_ORIGINS = [
      "http://localhost:5173",
      "http://127.0.0.1:5173",
-     "https://usa2-shop.vercel.app"
+     "https://usa2-shop.vercel.app" # Dirección de la aplicación
  ]
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/' # url para acceder a las imagenes
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # directorio donde se guardan las imagenes
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -104,13 +106,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage' # para que se comprima la carpeta static
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 print(os.environ['DATABASE_URL'])
 DATABASES = {
+    # Dirección de la base de datos
     'default': dj_database_url.config(default=os.environ['DATABASE_URL'])
 }
 
@@ -148,7 +151,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = 'static/' 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
@@ -156,4 +159,5 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Configuración de CORS
 CSRF_TRUSTED_ORIGINS = ['https://web-production-2e42.up.railway.app']
