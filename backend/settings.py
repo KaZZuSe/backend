@@ -31,7 +31,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','web-production-9f031.up.railway.app']
+ALLOWED_HOSTS = ['localhost','https://web-production-9f031.up.railway.app']
 
 
 # Application definition
