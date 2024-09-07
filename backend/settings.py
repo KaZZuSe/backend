@@ -31,7 +31,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','web-production-2e42.up.railway.app']
+ALLOWED_HOSTS = ['localhost','web-production-9f031.up.railway.app']
 
 
 # Application definition
@@ -160,4 +160,4 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configuración de CORS
-CSRF_TRUSTED_ORIGINS = ['https://web-production-2e42.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://web-production-9f031.up.railway.app']
