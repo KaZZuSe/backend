@@ -40,4 +40,4 @@ python .\manage.py migrate
 python .\manage.py runserver
 ```
 ## 📌 Notas
-Asegúrate de tener Docker y Python correctamente instalados en tu sistema.
+Asegúrate de tener Python correctamente instalado en tu sistema.
